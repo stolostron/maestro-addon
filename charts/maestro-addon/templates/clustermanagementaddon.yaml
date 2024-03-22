@@ -1,0 +1,15 @@
+apiVersion: addon.open-cluster-management.io/v1alpha1
+kind: ClusterManagementAddOn
+metadata:
+  name: maestro-addon
+spec:
+  addOnMeta:
+    description: Maestro AddOn
+    displayName: maestro-addon
+  supportedConfigs:
+  - group: addon.open-cluster-management.io
+    resource: addontemplates
+    defaultConfig:
+      name: maestro-addon-template
+  installStrategy:
+    type: Manual

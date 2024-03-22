@@ -1,0 +1,12 @@
+{
+    "CN": "ACM Maestro AddOn",
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "O": "ACM"
+        }
+    ]
+}

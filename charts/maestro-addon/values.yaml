@@ -1,0 +1,41 @@
+# Default values for maestro-addon.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imageOverrides:
+    maestroImage: image-registry.testing/maestro/maestro:latest
+    workImage: quay.io/open-cluster-management/work:latest
+    mqttImage: docker.io/library/eclipse-mosquitto:2.0.18
+    postgresImage: docker.io/library/postgres:14.2
+    addOnImage: quay.io/stolostron/maestro-addon:latest
+  imagePullPolicy: IfNotPresent
+  pullSecret: ""
+  templateOverrides: {}
+  namespace: maestro
+  hubNamespace: open-cluster-management-hub
+  agentNamespace: open-cluster-management-agent
+  logLevel: 2
+  db:
+    password: ""
+    pvc:
+      storageCapacity: 512Mi
+      storageClassName: ""
+  messageQueue:
+    useCustomizedCerts: false
+    certs:
+      ca: ""
+      caKey: ""
+      serverCert: ""
+      serverKey: ""
+      clientCert: ""
+      clientKey: ""
+
+hubconfig:
+  nodeSelector: {}
+  proxyConfigs: {}
+  replicaCount: 1
+  tolerations: []
+  ocpVersion: "4.12.0"
+
+org: open-cluster-management

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maestro-mqtt
+  namespace: '{{ .Values.global.namespace }}'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: maestro-mqtt
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        name: maestro-mqtt
+    spec:
+      containers:
+      - image: {{ .Values.global.imageOverrides.mqttImage }}
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        name: mosquitto
+        ports:
+        - containerPort: 1883
+          name: mosquitto
+        volumeMounts:
+        - mountPath: "/mosquitto/data"
+          name: mosquitto-persistent-storage
+        - mountPath: "/mosquitto/config/mosquitto.conf"
+          name: mosquitto-config
+          subPath: mosquitto.conf
+        - mountPath: "/mosquitto/certs"
+          name: mosquitto-certs
+      volumes:
+      - name: mosquitto-persistent-storage
+        emptyDir: {}
+      - name: mosquitto-config
+        configMap:
+          name: maestro-mqtt
+      - name: mosquitto-certs
+        secret:
+          secretName: maestro-mq-certs

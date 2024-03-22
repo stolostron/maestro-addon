@@ -1,0 +1,11 @@
+*.pem
+*.csr
+*.crt
+*.key
+
+kubeconfig
+contrib/join.sh
+
+vendor
+
+maestroaddon
