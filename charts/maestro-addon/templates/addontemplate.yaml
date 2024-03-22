@@ -1,0 +1,163 @@
+{{- $clusterCA := (lookup "v1" "Secret" .Values.messageQueue.amqStreams.namespace (printf "%s-cluster-ca-cert" .Values.messageQueue.amqStreams.name)) -}}
+{{- $kafkaRoute := (lookup "route.openshift.io/v1" "Route" .Values.messageQueue.amqStreams.namespace (printf "%s-kafka-tls-bootstrap" .Values.messageQueue.amqStreams.name)) -}}
+
+apiVersion: addon.open-cluster-management.io/v1alpha1
+kind: AddOnTemplate
+metadata:
+  name: maestro-addon-template
+spec:
+  addonName: maestro-addon
+  agentSpec:
+    workload:
+      manifests:
+      - apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          labels:
+            app: maestro-addon
+          name: maestro-addon
+          namespace: open-cluster-management-agent
+        spec:
+          progressDeadlineSeconds: 600
+          replicas: 1
+          revisionHistoryLimit: 10
+          selector:
+            matchLabels:
+              app: maestro-addon
+          strategy:
+            rollingUpdate:
+              maxSurge: 25%
+              maxUnavailable: 25%
+            type: RollingUpdate
+          template:
+            metadata:
+              annotations:
+                target.workload.openshift.io/management: '{"effect": "PreferredDuringScheduling"}'
+              creationTimestamp: null
+              labels:
+                app: maestro-addon
+            spec:
+              affinity:
+                podAntiAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - podAffinityTerm:
+                      labelSelector:
+                        matchExpressions:
+                        - key: app
+                          operator: In
+                          values:
+                          - maestro-addon
+                      topologyKey: failure-domain.beta.kubernetes.io/zone
+                    weight: 70
+                  - podAffinityTerm:
+                      labelSelector:
+                        matchExpressions:
+                        - key: app
+                          operator: In
+                          values:
+                          - maestro-addon
+                      topologyKey: kubernetes.io/hostname
+                    weight: 30
+              containers:
+              - args:
+                - /work
+                - agent
+                - --spoke-cluster-name={{`{{CLUSTER_NAME}}`}}
+                - --workload-source-driver=kafka
+                - --workload-source-config=/spoke/kafka-config/config.yaml
+                - --cloudevents-client-id={{`{{CLUSTER_NAME}}`}}-work-agent
+                - --cloudevents-client-codecs=manifestbundle
+                - --disable-leader-election
+                env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: metadata.name
+                image: {{ .Values.global.imageOverrides.maestroImage }}
+                imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+                livenessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /healthz
+                    port: 8443
+                    scheme: HTTPS
+                  initialDelaySeconds: 2
+                  periodSeconds: 10
+                  successThreshold: 1
+                  timeoutSeconds: 1
+                name: maestro-addon
+                readinessProbe:
+                  failureThreshold: 3
+                  httpGet:
+                    path: /healthz
+                    port: 8443
+                    scheme: HTTPS
+                  initialDelaySeconds: 2
+                  periodSeconds: 10
+                  successThreshold: 1
+                  timeoutSeconds: 1
+                resources:
+                  requests:
+                    cpu: 2m
+                    memory: 16Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+                  privileged: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                terminationMessagePath: /dev/termination-log
+                terminationMessagePolicy: File
+                volumeMounts:
+                - mountPath: /spoke/kafka-config
+                  name: maestro-addon-kafka-config
+                - mountPath: /spoke/certs
+                  name: maestro-mq-ca
+                - mountPath: /tmp
+                  name: tmpdir
+              dnsPolicy: ClusterFirst
+              restartPolicy: Always
+              schedulerName: default-scheduler
+              securityContext: {}
+              serviceAccountName: klusterlet-work-sa
+              terminationGracePeriodSeconds: 30
+              volumes:
+              - name: maestro-addon-kafka-config
+                configMap:
+                  name: maestro-addon-kafka-config
+              - name: maestro-mq-ca
+                secret:
+                  name: maestro-mq-ca
+              - emptyDir: {}
+                name: tmpdir
+      - apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: maestro-addon-kafka-config
+          namespace: open-cluster-management-agent
+        data:
+          config.yaml: |-
+            bootstrap.servers: {{- indent 1 (printf "%s:443" $kafkaRoute.spec.host) }}
+            ssl.ca.location: /spoke/certs/ca.crt
+            ssl.certificate.location: /managed/open-cluster-management.io-maestro-addon/tls.crt
+            ssl.key.location: /managed/open-cluster-management.io-maestro-addon/tls.key
+      - apiVersion: v1
+        kind: Secret
+        metadata:
+          name: maestro-mq-ca
+          namespace: open-cluster-management-agent
+        data:
+{{- range $key, $value := $clusterCA.data }}
+  {{- if eq $key "ca.crt" }}
+          ca.crt: {{ $value }}
+  {{- end }}
+{{- end }}
+  registration:
+  - type: CustomSigner
+    customSigner:
+      signerName: open-cluster-management.io/maestro-addon
+      signingCA:
+        name: maestro-mq-certs

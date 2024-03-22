@@ -1,0 +1,36 @@
+# Default values for maestro-addon.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imageOverrides:
+    maestroImage: image-registry.testing/maestro/maestro:latest
+    postgresImage: docker.io/library/postgres:14.2
+    addOnImage: quay.io/stolostron/maestro-addon:latest
+  imagePullPolicy: IfNotPresent
+  pullSecret: ""
+  namespace: maestro
+
+addOnManager:
+  namespace: open-cluster-management-hub
+
+maestro:
+  replicas: 1
+  logLevel: 2
+
+database:
+  useExternalDB: false
+
+messageQueue:
+  amqStreams:
+    name: "kafka"
+    namespace: "amq-streams"
+
+hubconfig:
+  nodeSelector: {}
+  proxyConfigs: {}
+  replicaCount: 1
+  tolerations: []
+  ocpVersion: "4.12.0"
+
+org: open-cluster-management

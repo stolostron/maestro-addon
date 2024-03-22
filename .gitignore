@@ -1,0 +1,13 @@
+*.pem
+*.csr
+*.crt
+*.key
+*.p12
+
+kubeconfig
+contrib/join.sh
+
+mock
+vendor
+
+maestroaddon

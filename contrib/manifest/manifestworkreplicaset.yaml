@@ -1,0 +1,37 @@
+apiVersion: work.open-cluster-management.io/v1alpha1
+kind: ManifestWorkReplicaSet
+metadata:
+  name: busybox
+  namespace: default
+spec:
+  placementRefs:
+    - name: all-clusters
+  manifestWorkTemplate:
+    workload:
+      manifests:
+        - kind: Namespace
+          apiVersion: v1
+          metadata:
+            name: mwrs-test
+        - kind: Deployment
+          apiVersion: apps/v1
+          metadata:
+            name: busybox
+            namespace: mwrs-test
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: busybox
+            template:
+              metadata:
+                labels:
+                  app: busybox
+              spec:
+                containers:
+                - name: busybox
+                  image: 'quay.io/prometheus/busybox:latest'
+                  args:
+                  - /bin/sh
+                  - '-c'
+                  - 'sleep 3600'

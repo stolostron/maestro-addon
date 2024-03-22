@@ -1,0 +1,48 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: maestro-addon-manager
+  namespace: '{{ .Values.global.namespace }}'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: maestro-addon-manager
+  template:
+    metadata:
+      labels:
+        app: maestro-addon-manager
+    spec:
+      serviceAccountName: maestro-addon-manager
+      containers:
+      - name: maestro-addon-manager
+        image: {{ .Values.global.imageOverrides.addOnImage }}
+        imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+        args:
+          - "/maestroaddon"
+          - "manager"
+          - "--disable-leader-election"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          runAsNonRoot: true
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmpdir
+        - mountPath: "/configs/kafka"
+          name: maestro-kafka-config
+        - mountPath: "/secrets/certs/kafka"
+          name: kafka-client-certs
+      volumes:
+      - emptyDir: {}
+        name: tmpdir
+      - name: maestro-kafka-config
+        secret:
+          secretName: maestro-kafka-config
+      - name: kafka-client-certs
+        secret:
+          secretName: kafka-client-certs
+      
