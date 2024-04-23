@@ -12,7 +12,7 @@ RUN GOOS=${OS} \
     CGO_ENABLED=0 \
     make build --warn-undefined-variables
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 ENV USER_UID=10001
 
 COPY --from=builder /go/src/github.com/stolostron/maestro-addon/maestroaddon /
