@@ -16,12 +16,13 @@ spec:
       serviceAccountName: maestro-addon-manager
       containers:
       - name: maestro-addon-manager
-        image: {{ .Values.global.imageOverrides.addOnImage }}
+        image: {{ .Values.global.imageOverrides.maestroAddOnImage }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         args:
           - "/maestroaddon"
           - "manager"
           - "--disable-leader-election"
+          - "--v={{ .Values.maestroAddOn.logLevel }}"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -45,4 +46,3 @@ spec:
       - name: kafka-client-certs
         secret:
           secretName: kafka-client-certs
-      

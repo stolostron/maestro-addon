@@ -2,7 +2,10 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"syscall"
+	"time"
 
 	"github.com/openshift-online/maestro/pkg/api/openapi"
 	"github.com/openshift/library-go/pkg/controller/factory"
@@ -10,9 +13,10 @@ import (
 	"github.com/stolostron/maestro-addon/pkg/helpers"
 	"github.com/stolostron/maestro-addon/pkg/mq"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	kubeapierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
 
 	clusterinformers "open-cluster-management.io/api/client/cluster/informers/externalversions/cluster/v1"
@@ -24,6 +28,7 @@ type ManagedClusterController struct {
 	clusterLister            clusterlisters.ManagedClusterLister
 	maestroAPIClient         *openapi.APIClient
 	messageQueueAuthzCreator mq.MessageQueueAuthzCreator
+	rateLimiter              workqueue.RateLimiter
 }
 
 func NewManagedClusterController(maestroServiceAddress string,
@@ -34,12 +39,13 @@ func NewManagedClusterController(maestroServiceAddress string,
 		clusterLister:            clusterInformer.Lister(),
 		maestroAPIClient:         helpers.NewMaestroAPIClient(maestroServiceAddress),
 		messageQueueAuthzCreator: messageQueueAuthzCreator,
+		rateLimiter:              workqueue.NewItemExponentialFailureRateLimiter(5*time.Second, 300*time.Second),
 	}
 
 	return factory.New().
-		WithInformersQueueKeysFunc(func(obj runtime.Object) []string {
+		WithInformersQueueKeyFunc(func(obj runtime.Object) string {
 			accessor, _ := meta.Accessor(obj)
-			return []string{accessor.GetName()}
+			return accessor.GetName()
 		}, clusterInformer.Informer()).
 		WithSync(controller.sync).
 		ToController("ManagedClusterController", recorder)
@@ -48,12 +54,12 @@ func NewManagedClusterController(maestroServiceAddress string,
 func (c *ManagedClusterController) sync(ctx context.Context, controllerContext factory.SyncContext) error {
 	logger := klog.FromContext(ctx)
 
-	managedClusterName := controllerContext.QueueKey()
+	clusterName := controllerContext.QueueKey()
 
-	logger.V(4).Info("Reconciling ManagedCluster", "managedClusterName", managedClusterName)
+	logger.V(4).Info("Reconciling ManagedCluster", "managedClusterName", clusterName)
 
-	managedCluster, err := c.clusterLister.Get(managedClusterName)
-	if errors.IsNotFound(err) {
+	managedCluster, err := c.clusterLister.Get(clusterName)
+	if kubeapierrors.IsNotFound(err) {
 		return nil
 	}
 	if err != nil {
@@ -70,11 +76,17 @@ func (c *ManagedClusterController) sync(ctx context.Context, controllerContext f
 		return nil
 	}
 
-	if err := c.ensureConsumer(ctx, managedClusterName); err != nil {
+	if err := c.ensureConsumer(ctx, clusterName); err != nil {
+		if errors.Is(err, syscall.ECONNREFUSED) {
+			logger.V(2).Info(fmt.Sprintf("Requeue the cluster %s to wait the maestro service ready", clusterName))
+			controllerContext.Queue().AddAfter(clusterName, c.rateLimiter.When(clusterName))
+			return nil
+		}
+
 		return err
 	}
 
-	if err := c.ensureACLs(ctx, managedClusterName); err != nil {
+	if err := c.ensureACLs(ctx, clusterName); err != nil {
 		return err
 	}
 

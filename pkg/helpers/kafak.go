@@ -8,6 +8,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/stolostron/maestro-addon/pkg/common"
 )
 
 // CreteKafkaPlaceholderTopics creates placeholder topics.
@@ -46,9 +47,7 @@ func CreateKafkaTopicsWithACLs(ctx context.Context, config *kafka.ConfigMap, sou
 		return err
 	}
 
-	// TODO: common name
-	commonName := fmt.Sprintf("maestro-kafka-%s", clusterName)
-	if err := createKafkaACLs(ctx, adminClient, commonName, sourceEventsTopic, sourceBroadcastTopic,
+	if err := createKafkaACLs(ctx, adminClient, clusterName, sourceEventsTopic, sourceBroadcastTopic,
 		agentEventsTopic, agentBroadcastTopic); err != nil {
 		return err
 	}
@@ -100,14 +99,16 @@ func createKafkaTopics(ctx context.Context, adminClient *kafka.AdminClient, newT
 	return errors.NewAggregate(errs)
 }
 
-func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, commonName string, topics ...string) error {
+func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, clusterName string, topics ...string) error {
 	logger := klog.FromContext(ctx)
+
+	principal := toPrincipal(clusterName)
 
 	expectedACLBindings := []kafka.ACLBinding{{
 		Type:                kafka.ResourceGroup,
 		Name:                "*",
 		ResourcePatternType: kafka.ResourcePatternTypeLiteral,
-		Principal:           fmt.Sprintf("User:CN=%s", commonName),
+		Principal:           principal,
 		Host:                "*",
 		Operation:           kafka.ACLOperationAll,
 		PermissionType:      kafka.ACLPermissionTypeAllow,
@@ -118,7 +119,7 @@ func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, common
 			Type:                kafka.ResourceTopic,
 			Name:                topic,
 			ResourcePatternType: kafka.ResourcePatternTypeLiteral,
-			Principal:           fmt.Sprintf("User:CN=%s", commonName),
+			Principal:           principal,
 			Host:                "*",
 			Operation:           kafka.ACLOperationAll,
 			PermissionType:      kafka.ACLPermissionTypeAllow,
@@ -133,7 +134,7 @@ func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, common
 		}
 
 		if hasACL(result, acl) {
-			logger.V(4).Info(fmt.Sprintf("acl %s/%s already exists for %s\n", acl.Type, acl.Name, acl.Principal))
+			logger.V(4).Info(fmt.Sprintf("acl %s/%s already exists for %s", acl.Type, acl.Name, acl.Principal))
 			continue
 		}
 
@@ -156,7 +157,7 @@ func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, common
 		}
 	}
 	if len(errs) == 0 {
-		logger.V(4).Info(fmt.Sprintf("acls is created successfully for agent %s\n", commonName))
+		logger.V(4).Info(fmt.Sprintf("acls is created successfully for agent %s", principal))
 	}
 
 	return errors.NewAggregate(errs)
@@ -181,4 +182,13 @@ func hasACL(acls *kafka.DescribeACLsResult, binding kafka.ACLBinding) bool {
 		}
 	}
 	return false
+}
+
+func toPrincipal(clusterName string) string {
+	commonName := fmt.Sprintf("system:open-cluster-management:cluster:%s:addon:%s:agent:%s-agent",
+		clusterName, common.AddOnName, common.AddOnName)
+	authGroup := "system:authenticated"
+	addOnGroup := fmt.Sprintf("system:open-cluster-management:addon:%s", common.AddOnName)
+	clusterGroup := fmt.Sprintf("system:open-cluster-management:cluster:%s:addon:%s", clusterName, common.AddOnName)
+	return fmt.Sprintf("User:CN=%s,O=%s+O=%s+O=%s", commonName, authGroup, addOnGroup, clusterGroup)
 }
