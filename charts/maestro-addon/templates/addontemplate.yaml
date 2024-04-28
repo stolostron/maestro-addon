@@ -59,15 +59,14 @@ spec:
                       topologyKey: kubernetes.io/hostname
                     weight: 30
               containers:
-              - args:
-                - /work
+              - command:
+                - /usr/local/bin/maestro
                 - agent
-                - --spoke-cluster-name={{`{{CLUSTER_NAME}}`}}
-                - --workload-source-driver=kafka
-                - --workload-source-config=/spoke/kafka-config/config.yaml
-                - --cloudevents-client-id={{`{{CLUSTER_NAME}}`}}-work-agent
-                - --cloudevents-client-codecs=manifestbundle
-                - --disable-leader-election
+                - --consumer-name={{`{{CLUSTER_NAME}}`}}
+                - --message-broker-type=kafka
+                - --message-broker-config-file=/spoke/configs/kafka-config.yaml
+                - --agent-client-id={{`{{CLUSTER_NAME}}`}}-work-agent
+                - --agent-client-codec=manifestbundle
                 env:
                 - name: POD_NAME
                   valueFrom:
@@ -112,7 +111,7 @@ spec:
                 terminationMessagePath: /dev/termination-log
                 terminationMessagePolicy: File
                 volumeMounts:
-                - mountPath: /spoke/kafka-config
+                - mountPath: /spoke/configs
                   name: maestro-addon-kafka-config
                 - mountPath: /spoke/certs
                   name: maestro-mq-ca
@@ -130,7 +129,7 @@ spec:
                   name: maestro-addon-kafka-config
               - name: maestro-mq-ca
                 secret:
-                  name: maestro-mq-ca
+                  secretName: maestro-mq-ca
               - emptyDir: {}
                 name: tmpdir
       - apiVersion: v1
@@ -139,11 +138,11 @@ spec:
           name: maestro-addon-kafka-config
           namespace: open-cluster-management-agent
         data:
-          config.yaml: |-
-            bootstrap.servers: {{- indent 1 (printf "%s:443" $kafkaRoute.spec.host) }}
-            ssl.ca.location: /spoke/certs/ca.crt
-            ssl.certificate.location: /managed/open-cluster-management.io-maestro-addon/tls.crt
-            ssl.key.location: /managed/open-cluster-management.io-maestro-addon/tls.key
+          kafka-config.yaml: |-
+            bootstrapServer: {{- indent 1 (printf "%s:443" $kafkaRoute.spec.host) }}
+            caFile: /spoke/certs/ca.crt
+            clientCertFile: /managed/open-cluster-management.io-maestro-addon/tls.crt
+            clientKeyFile: /managed/open-cluster-management.io-maestro-addon/tls.key
       - apiVersion: v1
         kind: Secret
         metadata:

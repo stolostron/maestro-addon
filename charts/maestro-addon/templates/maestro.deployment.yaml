@@ -7,7 +7,7 @@ metadata:
   name: maestro
   namespace: '{{ .Values.global.namespace }}'
 spec:
-  replicas: 1
+  replicas: {{ .Values.maestro.replicas }}
   selector:
     matchLabels:
       app: maestro
@@ -26,12 +26,13 @@ spec:
         - "/usr/local/bin/maestro"
         - server
         - "--client-id=maestro-$(POD_NAME)"
-        - "--mqtt-config-file=/secrets/mqtt/config.yaml"
-        - "--db-host-file=/secrets/rds/db.host"
-        - "--db-port-file=/secrets/rds/db.port"
-        - "--db-user-file=/secrets/rds/db.user"
-        - "--db-password-file=/secrets/rds/db.password"
-        - "--db-name-file=/secrets/rds/db.name"
+        - "--message-broker-type=kafka"
+        - "--message-broker-config-file=/secrets/mq/kafka/config.yaml"
+        - "--db-host-file=/secrets/rds/host"
+        - "--db-port-file=/secrets/rds/port"
+        - "--db-user-file=/secrets/rds/user"
+        - "--db-password-file=/secrets/rds/password"
+        - "--db-name-file=/secrets/rds/name"
         - "--db-sslmode=disable"
         - "--db-max-open-connections=50"
         - "--server-hostname=0.0.0.0"
@@ -44,7 +45,7 @@ spec:
         - "--enable-grpc-server=true"
         - "--grpc-server-bindport=8090"
         - "--alsologtostderr"
-        - "-v={{ .Values.global.logLevel }}"
+        - "-v={{ .Values.maestro.logLevel }}"
         env:
         - name: AMS_ENV
           value: development
@@ -87,6 +88,10 @@ spec:
         volumeMounts:
         - mountPath: "/secrets/rds"
           name: maestro-db-config
+        - mountPath: "/secrets/certs/kafka"
+          name: kafka-client-certs
+        - mountPath: "/secrets/mq/kafka"
+          name: maestro-kafka-config
       initContainers:
       - command:
         - "/usr/local/bin/maestro"
@@ -97,7 +102,7 @@ spec:
         - "--db-password-file=/secrets/rds/password"
         - "--db-name-file=/secrets/rds/name"
         - "--alsologtostderr"
-        - "-v={{ .Values.global.logLevel }}"
+        - "-v={{ .Values.maestro.logLevel }}"
         image: {{ .Values.global.imageOverrides.maestroImage }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         name: migration
@@ -109,3 +114,9 @@ spec:
       - name: maestro-db-config
         secret:
           secretName: maestro-db-config
+      - name: maestro-kafka-config
+        secret:
+          secretName: maestro-kafka-config
+      - name: kafka-client-certs
+        secret:
+          secretName: kafka-client-certs

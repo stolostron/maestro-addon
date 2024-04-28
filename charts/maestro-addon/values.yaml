@@ -4,19 +4,22 @@
 
 global:
   imageOverrides:
-    maestroImage: image-registry.testing/maestro/maestro:latest
+    maestroImage: quay.io/stolostron/maestro:latest
+    maestroAddOnImage: quay.io/stolostron/maestro-addon:latest
     postgresImage: docker.io/library/postgres:14.2
-    addOnImage: quay.io/stolostron/maestro-addon:latest
   imagePullPolicy: IfNotPresent
   pullSecret: ""
   namespace: maestro
 
-addOnManager:
-  namespace: open-cluster-management-hub
-
 maestro:
   replicas: 1
   logLevel: 2
+
+addOnManager:
+  namespace: open-cluster-management-hub
+
+maestroAddOn:
+  logLevel: 4
 
 database:
   useExternalDB: false
@@ -25,12 +28,3 @@ messageQueue:
   amqStreams:
     name: "kafka"
     namespace: "amq-streams"
-
-hubconfig:
-  nodeSelector: {}
-  proxyConfigs: {}
-  replicaCount: 1
-  tolerations: []
-  ocpVersion: "4.12.0"
-
-org: open-cluster-management

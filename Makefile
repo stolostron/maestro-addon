@@ -6,13 +6,8 @@ IMAGE_REGISTRY?=quay.io/stolostron
 IMAGE_TAG?=latest
 IMAGE_NAME?=$(IMAGE_REGISTRY)/maestro-addon:$(IMAGE_TAG)
 
-vendor:
-	go mod tidy 
-	go mod vendor
-.PHONY: vendor
-
-build: vendor
-	go build -ldflags="-s -w" -o maestroaddon cmd/manager/main.go
+build:
+	go build -trimpath -ldflags="-s -w" -o maestroaddon cmd/manager/main.go
 .PHONY: build
 
 image:

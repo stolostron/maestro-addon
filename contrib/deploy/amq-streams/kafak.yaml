@@ -30,9 +30,16 @@ spec:
       tls: true
       type: route
     storage:
-      type: ephemeral
+      type: jbod
+      volumes:
+      - id: 0
+        type: persistent-claim
+        size: 1Gi
+        deleteClaim: false
     version: 3.6.0
   zookeeper:
     replicas: 1
     storage:
-      type: ephemeral
+      type: persistent-claim
+      size: 1Gi
+      deleteClaim: false
