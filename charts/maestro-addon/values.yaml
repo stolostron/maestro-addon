@@ -28,3 +28,6 @@ messageQueue:
   amqStreams:
     name: "kafka"
     namespace: "amq-streams"
+    listener:
+      type: "route"
+      port: 443
