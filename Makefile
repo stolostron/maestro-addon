@@ -21,3 +21,7 @@ build:
 image:
 	$(container_tool) build -f Dockerfile -t $(IMAGE_NAME) .
 .PHONY: image
+
+test:
+	go test ./pkg/...
+.PHONY: image
