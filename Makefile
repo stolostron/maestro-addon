@@ -24,4 +24,4 @@ image:
 
 test:
 	go test ./pkg/...
-.PHONY: image
+.PHONY: test

@@ -11,6 +11,18 @@ import (
 	"github.com/stolostron/maestro-addon/pkg/common"
 )
 
+// an interface for kafka.AdminClient, this will help with testing
+type KafkaAdminClient interface {
+	DescribeTopics(ctx context.Context, topics kafka.TopicCollection,
+		options ...kafka.DescribeTopicsAdminOption) (result kafka.DescribeTopicsResult, err error)
+	DescribeACLs(ctx context.Context, aclBindingFilter kafka.ACLBindingFilter,
+		options ...kafka.DescribeACLsAdminOption) (result *kafka.DescribeACLsResult, err error)
+	CreateTopics(ctx context.Context, topics []kafka.TopicSpecification,
+		options ...kafka.CreateTopicsAdminOption) (result []kafka.TopicResult, err error)
+	CreateACLs(ctx context.Context, aclBindings kafka.ACLBindings,
+		options ...kafka.CreateACLsAdminOption) (result []kafka.CreateACLResult, err error)
+}
+
 // CreteKafkaPlaceholderTopics creates placeholder topics.
 // This avoids unknown topic error when subscribing to wildcard topics
 func CreteKafkaPlaceholderTopics(ctx context.Context, config *kafka.ConfigMap, sourceID string) error {
@@ -20,13 +32,7 @@ func CreteKafkaPlaceholderTopics(ctx context.Context, config *kafka.ConfigMap, s
 	}
 	defer client.Close()
 
-	return createKafkaTopics(ctx,
-		client,
-		fmt.Sprintf("sourceevents.%s.agent", sourceID),
-		fmt.Sprintf("sourcebroadcast.%s", sourceID),
-		fmt.Sprintf("agentevents.%s.agent", sourceID),
-		"agentbroadcast.agent",
-	)
+	return createKafkaTopics(ctx, client, kafkaPlaceholderTopics(sourceID)...)
 }
 
 func CreateKafkaTopicsWithACLs(ctx context.Context, config *kafka.ConfigMap, sourceID, clusterName string) error {
@@ -37,25 +43,16 @@ func CreateKafkaTopicsWithACLs(ctx context.Context, config *kafka.ConfigMap, sou
 	defer adminClient.Close()
 
 	// each cluster has four topics
-	sourceEventsTopic := fmt.Sprintf("sourceevents.%s.%s", sourceID, clusterName)
-	sourceBroadcastTopic := fmt.Sprintf("sourcebroadcast.%s", sourceID)
-	agentEventsTopic := fmt.Sprintf("agentevents.%s.%s", sourceID, clusterName)
-	agentBroadcastTopic := fmt.Sprintf("agentbroadcast.%s", clusterName)
+	topics := kafkaClusterTopics(sourceID, clusterName)
 
-	if err := createKafkaTopics(ctx, adminClient, sourceEventsTopic, sourceBroadcastTopic,
-		agentEventsTopic, agentBroadcastTopic); err != nil {
+	if err := createKafkaTopics(ctx, adminClient, topics...); err != nil {
 		return err
 	}
 
-	if err := createKafkaACLs(ctx, adminClient, clusterName, sourceEventsTopic, sourceBroadcastTopic,
-		agentEventsTopic, agentBroadcastTopic); err != nil {
-		return err
-	}
-
-	return nil
+	return createKafkaACLs(ctx, adminClient, clusterName, topics...)
 }
 
-func createKafkaTopics(ctx context.Context, adminClient *kafka.AdminClient, newTopics ...string) error {
+func createKafkaTopics(ctx context.Context, adminClient KafkaAdminClient, newTopics ...string) error {
 	logger := klog.FromContext(ctx)
 
 	topics, err := adminClient.DescribeTopics(ctx, kafka.NewTopicCollectionOfTopicNames(newTopics))
@@ -65,7 +62,7 @@ func createKafkaTopics(ctx context.Context, adminClient *kafka.AdminClient, newT
 
 	topicSpecs := []kafka.TopicSpecification{}
 	for _, topic := range newTopics {
-		if hasTopic(topics.TopicDescriptions, topic) {
+		if hasKafkaTopic(topics.TopicDescriptions, topic) {
 			logger.V(4).Info(fmt.Sprintf("topic %s already exists", topic))
 			continue
 		}
@@ -99,10 +96,10 @@ func createKafkaTopics(ctx context.Context, adminClient *kafka.AdminClient, newT
 	return errors.NewAggregate(errs)
 }
 
-func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, clusterName string, topics ...string) error {
+func createKafkaACLs(ctx context.Context, adminClient KafkaAdminClient, clusterName string, topics ...string) error {
 	logger := klog.FromContext(ctx)
 
-	principal := toPrincipal(clusterName)
+	principal := toKafkaPrincipal(clusterName)
 
 	expectedACLBindings := []kafka.ACLBinding{{
 		Type:                kafka.ResourceGroup,
@@ -133,7 +130,7 @@ func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, cluste
 			return err
 		}
 
-		if hasACL(result, acl) {
+		if hasKafkaACL(result, acl) {
 			logger.V(4).Info(fmt.Sprintf("acl %s/%s already exists for %s", acl.Type, acl.Name, acl.Principal))
 			continue
 		}
@@ -163,7 +160,7 @@ func createKafkaACLs(ctx context.Context, adminClient *kafka.AdminClient, cluste
 	return errors.NewAggregate(errs)
 }
 
-func hasTopic(topics []kafka.TopicDescription, topic string) bool {
+func hasKafkaTopic(topics []kafka.TopicDescription, topic string) bool {
 	for _, t := range topics {
 		if t.Error.Code() == kafka.ErrNoError && t.Name == topic {
 			return true
@@ -173,7 +170,7 @@ func hasTopic(topics []kafka.TopicDescription, topic string) bool {
 	return false
 }
 
-func hasACL(acls *kafka.DescribeACLsResult, binding kafka.ACLBinding) bool {
+func hasKafkaACL(acls *kafka.DescribeACLsResult, binding kafka.ACLBinding) bool {
 	if acls.Error.Code() == kafka.ErrNoError {
 		for _, a := range acls.ACLBindings {
 			if a.Name == binding.Name {
@@ -184,7 +181,25 @@ func hasACL(acls *kafka.DescribeACLsResult, binding kafka.ACLBinding) bool {
 	return false
 }
 
-func toPrincipal(clusterName string) string {
+func kafkaPlaceholderTopics(sourceID string) []string {
+	return []string{
+		fmt.Sprintf("sourceevents.%s.agent", sourceID),
+		fmt.Sprintf("sourcebroadcast.%s", sourceID),
+		fmt.Sprintf("agentevents.%s.agent", sourceID),
+		"agentbroadcast.agent",
+	}
+}
+
+func kafkaClusterTopics(sourceID, clusterName string) []string {
+	return []string{
+		fmt.Sprintf("sourceevents.%s.%s", sourceID, clusterName),
+		fmt.Sprintf("sourcebroadcast.%s", sourceID),
+		fmt.Sprintf("agentevents.%s.%s", sourceID, clusterName),
+		fmt.Sprintf("agentbroadcast.%s", clusterName),
+	}
+}
+
+func toKafkaPrincipal(clusterName string) string {
 	commonName := fmt.Sprintf("system:open-cluster-management:cluster:%s:addon:%s:agent:%s-agent",
 		clusterName, common.AddOnName, common.AddOnName)
 	authGroup := "system:authenticated"
