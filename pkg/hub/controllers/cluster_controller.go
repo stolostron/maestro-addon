@@ -71,7 +71,7 @@ func (c *ManagedClusterController) sync(ctx context.Context, controllerContext f
 		return nil
 	}
 
-	if meta.IsStatusConditionFalse(managedCluster.Status.Conditions, clusterv1.ManagedClusterConditionJoined) {
+	if !meta.IsStatusConditionTrue(managedCluster.Status.Conditions, clusterv1.ManagedClusterConditionJoined) {
 		// the cluster is not joined yet, do nothing
 		return nil
 	}
@@ -86,15 +86,11 @@ func (c *ManagedClusterController) sync(ctx context.Context, controllerContext f
 		return err
 	}
 
-	if err := c.ensureACLs(ctx, clusterName); err != nil {
-		return err
-	}
-
-	return nil
+	return c.ensureACLs(ctx, clusterName)
 }
 
 func (c *ManagedClusterController) ensureConsumer(ctx context.Context, managedClusterName string) error {
-	existed, err := c.findConsumerByName(ctx, managedClusterName)
+	existed, err := helpers.FindConsumerByName(ctx, c.maestroAPIClient, managedClusterName)
 	if err != nil {
 		return err
 	}
@@ -104,10 +100,7 @@ func (c *ManagedClusterController) ensureConsumer(ctx context.Context, managedCl
 	}
 
 	// create a consumer in the maestro
-	_, _, err = c.maestroAPIClient.DefaultApi.ApiMaestroV1ConsumersPost(ctx).
-		Consumer(openapi.Consumer{Name: openapi.PtrString(managedClusterName)}).
-		Execute()
-	return err
+	return helpers.CreateConsumer(ctx, c.maestroAPIClient, managedClusterName)
 }
 
 func (c *ManagedClusterController) ensureACLs(ctx context.Context, managedClusterName string) error {
@@ -116,21 +109,4 @@ func (c *ManagedClusterController) ensureACLs(ctx context.Context, managedCluste
 	}
 
 	return nil
-}
-
-func (c *ManagedClusterController) findConsumerByName(ctx context.Context, managedClusterName string) (bool, error) {
-	list, _, err := c.maestroAPIClient.DefaultApi.ApiMaestroV1ConsumersGet(ctx).
-		Search(fmt.Sprintf("name = '%s'", managedClusterName)).
-		Execute()
-	if err != nil {
-		return false, err
-	}
-
-	for _, consumer := range list.Items {
-		if *consumer.Name == managedClusterName {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
