@@ -4,10 +4,11 @@
 *.key
 *.p12
 
+.DS_Store
 kubeconfig
 contrib/join.sh
 
-mock
 vendor
+_output
 
 maestroaddon
