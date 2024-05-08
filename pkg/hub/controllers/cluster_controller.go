@@ -127,7 +127,7 @@ func (c *ManagedClusterController) findConsumerByName(ctx context.Context, manag
 	}
 
 	for _, consumer := range list.Items {
-		if consumer.Name == &managedClusterName {
+		if *consumer.Name == managedClusterName {
 			return true, nil
 		}
 	}

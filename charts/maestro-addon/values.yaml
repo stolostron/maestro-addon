@@ -19,7 +19,7 @@ addOnManager:
   namespace: open-cluster-management-hub
 
 maestroAddOn:
-  logLevel: 4
+  logLevel: 2
 
 database:
   useExternalDB: false
