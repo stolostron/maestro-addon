@@ -25,3 +25,7 @@ image:
 test:
 	go test ./pkg/...
 .PHONY: test
+
+e2e-test:
+	echo "Run e2e tests"
+.PHONY: test-e2e
