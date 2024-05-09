@@ -1,9 +1,8 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: work-controller-grpcconfig
-  namespace: open-cluster-management-hub
+  name: work-driver-config
 type: Opaque
 stringData:
-  grpcconfig: |
+  config.yaml: |
     url: maestro-grpc.maestro:8090
