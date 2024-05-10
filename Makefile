@@ -27,5 +27,10 @@ test:
 .PHONY: test
 
 e2e-test:
-	echo "Run e2e tests"
-.PHONY: test-e2e
+	go test -c ./test/e2e -o _output/e2e.test
+	./test/e2e/hack/e2e.sh
+.PHONY: e2e-test
+
+cleanup:
+	rm -rf _output
+.PHONY: cleanup
