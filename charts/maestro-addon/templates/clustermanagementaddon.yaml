@@ -10,6 +10,6 @@ spec:
   - group: addon.open-cluster-management.io
     resource: addontemplates
     defaultConfig:
-      name: maestro-addon-template
+      name: maestro-addon
   installStrategy:
     type: Manual

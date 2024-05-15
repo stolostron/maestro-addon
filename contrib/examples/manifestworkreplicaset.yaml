@@ -5,7 +5,7 @@ metadata:
   namespace: default
 spec:
   placementRefs:
-    - name: all-clusters
+    - name: busybox
   manifestWorkTemplate:
     workload:
       manifests:
