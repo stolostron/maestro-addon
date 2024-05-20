@@ -64,7 +64,8 @@ spec:
                 - --message-broker-type=kafka
                 - --message-broker-config-file=/spoke/configs/kafka-config.yaml
                 - --agent-client-id={{`{{CLUSTER_NAME}}`}}-work-agent
-                - --agent-client-codec=manifestbundle
+                - --agent-client-codecs=manifestbundle
+                - --v={{ .Values.maestroAgent.logLevel }}
                 env:
                 - name: POD_NAME
                   valueFrom:
