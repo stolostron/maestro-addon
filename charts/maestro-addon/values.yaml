@@ -4,8 +4,8 @@
 
 global:
   imageOverrides:
-    maestroImage: quay.io/stolostron/maestro:latest
-    maestroAddOnImage: quay.io/stolostron/maestro-addon:latest
+    maestroImage: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/maestro-main/maestro-main:cd7e4824867a6bba4dd7bd75df106fa6b0f9157d
+    maestroAddOnImage: quay.io/redhat-user-workloads/crt-redhat-acm-tenant/maestro-main/maestro-addon-main:fa5b3932f4d451b9c9fa9f59bd8bdb8c954ec50b
     postgresImage: docker.io/library/postgres:14.2
   imagePullPolicy: IfNotPresent
   pullSecret: ""
@@ -13,6 +13,9 @@ global:
 
 maestro:
   replicas: 1
+  logLevel: 2
+
+maestroAgent:
   logLevel: 2
 
 addOnManager:
