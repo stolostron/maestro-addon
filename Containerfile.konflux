@@ -20,12 +20,8 @@ RUN \
     microdnf clean all
 
 COPY --from=builder \
-    /maestro-addon/maestro-addon \
+    /maestro-addon/maestroaddon \
     /usr/local/bin/
-
-EXPOSE 8000
-
-ENTRYPOINT ["/usr/local/bin/maestro-addon", "serve"]
 
 LABEL name="maestro-addon" \
       vendor="Red Hat, Inc." \
