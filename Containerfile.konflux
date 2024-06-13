@@ -5,7 +5,9 @@ WORKDIR $SOURCE_DIR
 COPY . $SOURCE_DIR
 
 ENV GOFLAGS=""
-RUN make binary
+RUN GOOS=${OS} \
+    GOARCH=${ARCH} \
+    make build --warn-undefined-variables
 RUN pwd
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
