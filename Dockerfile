@@ -1,4 +1,4 @@
-FROM golang:1.21-bullseye AS builder
+FROM registry.ci.openshift.org/stolostron/builder:go1.21-linux AS builder
 
 ARG OS=linux
 ARG ARCH=amd64
