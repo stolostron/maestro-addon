@@ -9,7 +9,7 @@ function wait_command() {
 }
 
 # TODO using stolostron image instead of this image once the stolostron image is available
-maestro_image=${MAESTRO_IMAGE_NAME:-quay.io/redhat-user-workloads/crt-redhat-acm-tenant/maestro-main/maestro-main:cd7e4824867a6bba4dd7bd75df106fa6b0f9157d}
+maestro_image=${MAESTRO_IMAGE_NAME:-quay.io/redhat-user-workloads/crt-redhat-acm-tenant/maestro-main/maestro-main:351a2648395ec8bd080c6c16ca35ec3ab2514c2f}
 maestro_addon_image=${IMAGE_NAME:-quay.io/stolostron/maestro-addon:latest}
 
 echo "=== Maestro Image: $maestro_image"

@@ -61,10 +61,10 @@ spec:
                 - /usr/local/bin/maestro
                 - agent
                 - --consumer-name={{`{{CLUSTER_NAME}}`}}
-                - --message-broker-type=kafka
-                - --message-broker-config-file=/spoke/configs/kafka-config.yaml
-                - --agent-client-id={{`{{CLUSTER_NAME}}`}}-work-agent
-                - --agent-client-codecs=manifestbundle
+                - --workload-source-driver=kafka
+                - --workload-source-config=/spoke/configs/kafka-config.yaml
+                - --cloudevents-client-id={{`{{CLUSTER_NAME}}`}}-work-agent
+                - --cloudevents-client-codecs=manifestbundle
                 - --v={{ .Values.maestroAgent.logLevel }}
                 env:
                 - name: POD_NAME
