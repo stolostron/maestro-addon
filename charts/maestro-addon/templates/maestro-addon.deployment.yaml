@@ -19,7 +19,7 @@ spec:
         image: {{ .Values.global.imageOverrides.maestroAddOnImage }}
         imagePullPolicy: {{ .Values.global.imagePullPolicy }}
         args:
-          - "/maestroaddon"
+          - "/usr/local/bin/maestroaddon"
           - "manager"
           - "--disable-leader-election"
           - "--v={{ .Values.maestroAddOn.logLevel }}"
