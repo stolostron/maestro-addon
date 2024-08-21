@@ -3,12 +3,17 @@
 *.crt
 *.key
 *.p12
+*.output
+*.log
 
 .DS_Store
 kubeconfig
 contrib/join.sh
 
+cluster.manifestworks.json
 vendor
 _output
 
 maestroaddon
+maestroperf
+

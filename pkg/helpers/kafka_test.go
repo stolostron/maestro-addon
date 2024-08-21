@@ -17,21 +17,9 @@ func TestCreateKafkaTopics(t *testing.T) {
 	}{
 		{
 			name:           "create place holder topics",
-			topics:         kafkaPlaceholderTopics("test"),
+			topics:         kafkaTopics(),
 			intiTopics:     []string{},
-			expectedTopics: kafkaPlaceholderTopics("test"),
-		},
-		{
-			name:           "create kafka cluster topics",
-			topics:         kafkaClusterTopics("test", "cluster"),
-			intiTopics:     []string{},
-			expectedTopics: kafkaClusterTopics("test", "cluster"),
-		},
-		{
-			name:           "topics already exist",
-			intiTopics:     kafkaClusterTopics("test", "cluster"),
-			topics:         kafkaClusterTopics("test", "cluster"),
-			expectedTopics: kafkaClusterTopics("test", "cluster"),
+			expectedTopics: kafkaTopics(),
 		},
 	}
 
@@ -57,8 +45,8 @@ func TestCreateKafkaACLs(t *testing.T) {
 	}{
 		{
 			name:         "create kafka cluster topics",
-			topics:       kafkaClusterTopics("test", "cluster"),
-			expectedACLs: append([]string{"*"}, kafkaClusterTopics("test", "cluster")...),
+			topics:       kafkaTopics(),
+			expectedACLs: append([]string{"*"}, kafkaTopics()...),
 		},
 	}
 

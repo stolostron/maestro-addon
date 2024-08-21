@@ -29,7 +29,7 @@ func NewMessageQueueAuthzCreator(mqType, mqConfigPath string) (MessageQueueAuthz
 			return nil, err
 		}
 
-		if err := helpers.CreteKafkaPlaceholderTopics(context.Background(), config, sourceID); err != nil {
+		if err := helpers.CreteKafkaTopics(context.Background(), config, sourceID); err != nil {
 			return nil, err
 		}
 
@@ -94,7 +94,7 @@ type KafkaAuthzCreator struct {
 }
 
 func (c *KafkaAuthzCreator) CreateAuthorizations(ctx context.Context, clusterName string) error {
-	return helpers.CreateKafkaTopicsWithACLs(ctx, c.config, sourceID, clusterName)
+	return helpers.CreateACLs(ctx, c.config, sourceID, clusterName)
 }
 
 func (c *KafkaAuthzCreator) DeleteAuthorizations(ctx context.Context, clusterName string) error {

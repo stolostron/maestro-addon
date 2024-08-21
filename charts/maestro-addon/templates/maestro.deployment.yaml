@@ -44,6 +44,7 @@ spec:
         - "--http-write-timeout=30s"
         - "--enable-grpc-server=true"
         - "--grpc-server-bindport=8090"
+        - "--disable-grpc-tls"
         - "--alsologtostderr"
         - "-v={{ .Values.maestro.logLevel }}"
         env:
