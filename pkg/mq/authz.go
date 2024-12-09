@@ -6,9 +6,10 @@ import (
 	"os"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/stolostron/maestro-addon/pkg/helpers"
 	"gopkg.in/yaml.v2"
 	"k8s.io/klog/v2"
+
+	"github.com/stolostron/maestro-addon/pkg/helpers"
 )
 
 const MessageQueueKafka = "kafka"
