@@ -10,18 +10,17 @@ import (
 	"github.com/openshift-online/maestro/pkg/api/openapi"
 	"github.com/openshift/library-go/pkg/controller/factory"
 	"github.com/openshift/library-go/pkg/operator/events"
-	"github.com/stolostron/maestro-addon/pkg/helpers"
-	"github.com/stolostron/maestro-addon/pkg/mq"
-
 	kubeapierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
-
 	clusterinformers "open-cluster-management.io/api/client/cluster/informers/externalversions/cluster/v1"
 	clusterlisters "open-cluster-management.io/api/client/cluster/listers/cluster/v1"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
+
+	"github.com/stolostron/maestro-addon/pkg/helpers"
+	"github.com/stolostron/maestro-addon/pkg/mq"
 )
 
 type ManagedClusterController struct {

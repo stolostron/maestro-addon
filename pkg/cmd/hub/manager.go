@@ -1,9 +1,8 @@
 package hub
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/openshift/library-go/pkg/controller/controllercmd"
+	"github.com/spf13/cobra"
 
 	"github.com/stolostron/maestro-addon/pkg/hub"
 	"github.com/stolostron/maestro-addon/pkg/version"
