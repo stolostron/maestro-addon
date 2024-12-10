@@ -5,16 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stolostron/maestro-addon/pkg/helpers"
-	"github.com/stolostron/maestro-addon/pkg/helpers/mock"
-	"github.com/stolostron/maestro-addon/pkg/mq"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
 	fakeclusterclient "open-cluster-management.io/api/client/cluster/clientset/versioned/fake"
 	clusterinformers "open-cluster-management.io/api/client/cluster/informers/externalversions"
 	clusterv1 "open-cluster-management.io/api/cluster/v1"
+
+	"github.com/stolostron/maestro-addon/pkg/helpers"
+	"github.com/stolostron/maestro-addon/pkg/helpers/mock"
+	"github.com/stolostron/maestro-addon/pkg/mq"
 )
 
 func TestClusterSync(t *testing.T) {

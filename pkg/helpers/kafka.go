@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/klog/v2"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/stolostron/maestro-addon/pkg/common"
 )
 

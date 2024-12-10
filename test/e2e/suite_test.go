@@ -9,7 +9,6 @@ import (
 	"github.com/onsi/gomega"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-
 	workclientset "open-cluster-management.io/api/client/work/clientset/versioned"
 )
 
