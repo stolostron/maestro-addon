@@ -23,33 +23,25 @@ type KafkaAdminClient interface {
 		options ...kafka.CreateACLsAdminOption) (result []kafka.CreateACLResult, err error)
 }
 
-// CreteKafkaPlaceholderTopics creates placeholder topics.
-// This avoids unknown topic error when subscribing to wildcard topics
-func CreteKafkaPlaceholderTopics(ctx context.Context, config *kafka.ConfigMap, sourceID string) error {
+// CreteKafkaTopics creates placeholder topics.
+func CreteKafkaTopics(ctx context.Context, config *kafka.ConfigMap, sourceID string) error {
 	client, err := kafka.NewAdminClient(config)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
-	return createKafkaTopics(ctx, client, kafkaPlaceholderTopics(sourceID)...)
+	return createKafkaTopics(ctx, client, kafkaTopics()...)
 }
 
-func CreateKafkaTopicsWithACLs(ctx context.Context, config *kafka.ConfigMap, sourceID, clusterName string) error {
+func CreateACLs(ctx context.Context, config *kafka.ConfigMap, sourceID, clusterName string) error {
 	adminClient, err := kafka.NewAdminClient(config)
 	if err != nil {
 		return err
 	}
 	defer adminClient.Close()
 
-	// each cluster has four topics
-	topics := kafkaClusterTopics(sourceID, clusterName)
-
-	if err := createKafkaTopics(ctx, adminClient, topics...); err != nil {
-		return err
-	}
-
-	return createKafkaACLs(ctx, adminClient, clusterName, topics...)
+	return createKafkaACLs(ctx, adminClient, clusterName, kafkaTopics()...)
 }
 
 func createKafkaTopics(ctx context.Context, adminClient KafkaAdminClient, newTopics ...string) error {
@@ -69,7 +61,7 @@ func createKafkaTopics(ctx context.Context, adminClient KafkaAdminClient, newTop
 
 		topicSpecs = append(topicSpecs, kafka.TopicSpecification{
 			Topic:             topic,
-			NumPartitions:     1,
+			NumPartitions:     50,
 			ReplicationFactor: 1,
 		})
 	}
@@ -96,6 +88,8 @@ func createKafkaTopics(ctx context.Context, adminClient KafkaAdminClient, newTop
 	return errors.NewAggregate(errs)
 }
 
+// Using two topics to pub/sub events among the Kafka broker and agents
+// TODO consider how to control the agent ACLs
 func createKafkaACLs(ctx context.Context, adminClient KafkaAdminClient, clusterName string, topics ...string) error {
 	logger := klog.FromContext(ctx)
 
@@ -181,22 +175,8 @@ func hasKafkaACL(acls *kafka.DescribeACLsResult, binding kafka.ACLBinding) bool 
 	return false
 }
 
-func kafkaPlaceholderTopics(sourceID string) []string {
-	return []string{
-		fmt.Sprintf("sourceevents.%s.agent", sourceID),
-		fmt.Sprintf("sourcebroadcast.%s", sourceID),
-		fmt.Sprintf("agentevents.%s.agent", sourceID),
-		"agentbroadcast.agent",
-	}
-}
-
-func kafkaClusterTopics(sourceID, clusterName string) []string {
-	return []string{
-		fmt.Sprintf("sourceevents.%s.%s", sourceID, clusterName),
-		fmt.Sprintf("sourcebroadcast.%s", sourceID),
-		fmt.Sprintf("agentevents.%s.%s", sourceID, clusterName),
-		fmt.Sprintf("agentbroadcast.%s", clusterName),
-	}
+func kafkaTopics() []string {
+	return []string{"sourceevents", "agentevents"}
 }
 
 func toKafkaPrincipal(clusterName string) string {

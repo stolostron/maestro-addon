@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 REPO_DIR="$(cd "$(dirname ${BASH_SOURCE[0]})/../../.." ; pwd -P)"
+IMG_REPO="https://quay.io/api/v1/repository/redhat-user-workloads/crt-redhat-acm-tenant/maestro-main/maestro-main"
 
 function wait_command() {
   local command="$1"; shift
@@ -8,8 +9,9 @@ function wait_command() {
   ((++wait_seconds))
 }
 
-# TODO using stolostron image instead of this image once the stolostron image is available
-maestro_image=${MAESTRO_IMAGE_NAME:-quay.io/redhat-user-workloads/crt-redhat-acm-tenant/maestro-main/maestro-main:351a2648395ec8bd080c6c16ca35ec3ab2514c2f}
+latest_img_tag=$(curl -s -X GET "${IMG_REPO}" | jq -s -c -r 'sort_by(.tags[].last_modified) | .[].tags[].name' | grep -E '^[a-z0-9]{40}$' | head -n 1)
+
+maestro_image=${MAESTRO_IMAGE_NAME:-"quay.io/redhat-user-workloads/crt-redhat-acm-tenant/maestro-main/maestro-main:${latest_img_tag}"}
 maestro_addon_image=${IMAGE_NAME:-quay.io/stolostron/maestro-addon:latest}
 
 echo "=== Maestro Image: $maestro_image"
