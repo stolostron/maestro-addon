@@ -17,7 +17,7 @@ require (
 	k8s.io/client-go v0.31.3
 	k8s.io/component-base v0.31.3
 	k8s.io/klog/v2 v2.130.1
-	k8s.io/utils v0.0.0-20240921022957-49e7df575cb6
+	k8s.io/utils v0.0.0-20250321185631-1f6e0b77f77e
 	open-cluster-management.io/api v0.15.1-0.20241120090202-cb7ce98ab874
 	open-cluster-management.io/sdk-go v0.15.1-0.20241224013925-71378a533f22
 	sigs.k8s.io/yaml v1.4.0
