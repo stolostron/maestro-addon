@@ -65,8 +65,6 @@ go run pkg/hub/maestro/works/main.go --cluster-begin-index=2501 > agent-works-30
 
 ### Three Maestro Instances
 
-### One Maestro Instance
-
 ![maestro-3-cpu-usage](result/maestro-3-grpc-cpu.png)
 
 ![maestro-3-mem-usage](result/maestro-3-grpc-mem.png)
@@ -75,4 +73,3 @@ go run pkg/hub/maestro/works/main.go --cluster-begin-index=2501 > agent-works-30
 
 1. Workloads can be evenly distributed across all instances.
 2. Each instance consumes the same resources.
-
