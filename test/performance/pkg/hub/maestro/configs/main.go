@@ -16,7 +16,7 @@ import (
 	"time"
 
 	confluentkafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	addoncommon "github.com/stolostron/maestro-addon/pkg/common"
 	"github.com/stolostron/maestro-addon/pkg/mq"
