@@ -7,7 +7,7 @@ require (
 	github.com/evanphx/json-patch v5.9.0+incompatible
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.36.1
-	github.com/openshift-online/maestro v0.0.0-20241129070634-3a56948922f4
+	github.com/openshift-online/maestro 001af75eb033
 	github.com/openshift/library-go v0.0.0-20250228164547-bad2d1bf3a37
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
