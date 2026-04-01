@@ -9,8 +9,8 @@ require (
 	github.com/onsi/gomega v1.36.1
 	github.com/openshift-online/maestro v0.0.0-20241129070634-3a56948922f4
 	github.com/openshift/library-go v0.0.0-20250228164547-bad2d1bf3a37
-	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/cobra v1.10.2
+	github.com/spf13/pflag v1.0.9
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.32.2
 	k8s.io/apimachinery v0.32.2
