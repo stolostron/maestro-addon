@@ -2,6 +2,8 @@
 
 The maestro addon is used to enable the maestro in the ACM
 
+This repo is archived, please use https://github.com/stolostron/cloudevents-conductor instead
+
 ## Build
 
 ### Build binary
